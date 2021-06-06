@@ -1,10 +1,10 @@
 #![feature(test)]
 
-extern crate test;
 extern crate roaring_bench;
+extern crate test;
 
-extern crate roaring;
 extern crate croaring;
+extern crate roaring;
 
 #[cfg(feature = "quick")]
 macro_rules! single_data {
@@ -12,7 +12,7 @@ macro_rules! single_data {
         mod $cb {
             $cb! { census_income_0(CENSUS_INCOME[0]) }
         }
-    }
+    };
 }
 
 #[cfg(feature = "quick")]
@@ -21,7 +21,7 @@ macro_rules! multi_data {
         mod $cb {
             $cb! { census_income_0_1(CENSUS_INCOME[0], CENSUS_INCOME[1]) }
         }
-    }
+    };
 }
 
 #[cfg(not(feature = "quick"))]
@@ -35,7 +35,7 @@ macro_rules! single_data {
             $cb! { census_income_4(CENSUS_INCOME[4]) }
             $cb! { census_income_5(CENSUS_INCOME[5]) }
         }
-    }
+    };
 }
 
 #[cfg(not(feature = "quick"))]
@@ -49,7 +49,7 @@ macro_rules! multi_data {
             $cb! { census_income_4_5(CENSUS_INCOME[4], CENSUS_INCOME[5]) }
             $cb! { census_income_5_6(CENSUS_INCOME[5], CENSUS_INCOME[6]) }
         }
-    }
+    };
 }
 
 mod bench {
@@ -62,7 +62,7 @@ mod bench {
                             #[bench]
                             fn $n(b: &mut ::test::Bencher) {
                                 let data = &::roaring_bench::$d[$i];
-                                let $bitmap = data.iter().collect::<::roaring::RoaringBitmap<u32>>();
+                                let $bitmap = data.iter().copied().collect::<::roaring::RoaringBitmap>();
                                 b.iter(|| {
                                     let $bitmap = ::test::black_box(&$bitmap);
                                     $($body)*
@@ -84,8 +84,8 @@ mod bench {
                             fn $n(b: &mut ::test::Bencher) {
                                 let data1 = &::roaring_bench::$d1[$i1];
                                 let data2 = &::roaring_bench::$d2[$i2];
-                                let $bitmap1 = data1.iter().collect::<::roaring::RoaringBitmap<u32>>();
-                                let $bitmap2 = data2.iter().collect::<::roaring::RoaringBitmap<u32>>();
+                                let $bitmap1 = data1.iter().copied().collect::<::roaring::RoaringBitmap>();
+                                let $bitmap2 = data2.iter().copied().collect::<::roaring::RoaringBitmap>();
                                 b.iter(|| {
                                     let $bitmap1 = ::test::black_box(&$bitmap1);
                                     let $bitmap2 = ::test::black_box(&$bitmap2);
@@ -104,11 +104,11 @@ mod bench {
                 #[bench]
                 fn $n(b: &mut ::test::Bencher) {
                     let data = &::roaring_bench::$d[$i];
-                    b.iter(|| -> ::roaring::RoaringBitmap<u32> {
-                        ::test::black_box(data).iter().collect()
+                    b.iter(|| -> ::roaring::RoaringBitmap {
+                        ::test::black_box(data).iter().copied().collect()
                     });
                 }
-            }
+            };
         }
 
         single_data!(create);
@@ -186,18 +186,20 @@ mod bench {
                 fn $n(b: &mut ::test::Bencher) {
                     let data = &::roaring_bench::$d[$i];
                     b.iter(|| {
-                        let mut bitmap = ::croaring::Bitmap::create_with_capacity(::test::black_box(data).len() as u32);
+                        let mut bitmap = ::croaring::Bitmap::create_with_capacity(
+                            ::test::black_box(data).len() as u32,
+                        );
                         bitmap.add_many(::test::black_box(data));
                         bitmap
                     });
                 }
-            }
+            };
         }
         single_data!(create);
 
         s! { (bitmap)
             clone { bitmap.clone() }
-            iter_sum { bitmap.into_iter().sum::<u32>() }
+            iter_sum { bitmap.iter().sum::<u32>() }
             is_empty { bitmap.is_empty() }
             len { bitmap.cardinality() }
         }

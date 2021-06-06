@@ -7,8 +7,8 @@ authors = ["Wim Looman <wim@nemo157.com>"]
 quick = []
 
 [dependencies]
-zip = "0.2.0"
+croaring = "0.5.0"
 error-chain = "0.7.2"
-lazy_static = "0.2.2"
-roaring = "0.4.2"
-croaring = "0.1.3"
+lazy_static = "1.4.0"
+roaring = "0.7.0"
+zip = "0.5.13"
